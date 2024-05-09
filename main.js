@@ -5,15 +5,6 @@ import { DynamicalSystem } from "./render.js"
 
 
 
-const initX = 0.5
-
-const initSample = 600
-
-const initIteration = 100
-
-const initThreshold = 20
-
-const initWidth = 12
 
 
 const page = document.getElementById("page")
@@ -32,6 +23,17 @@ page.appendChild(UIcontainer)
 
 
 const [canvas, canvasCtx] = createCanvas(UIcontainer)
+
+
+const initX = 0.5
+
+const initSample = canvas.width
+
+const initIteration = 100
+
+const initThreshold = 20
+
+const initWidth = 12
 
 
 
@@ -174,9 +176,6 @@ UIcontainer.appendChild(slider.container)
 
 
 
-
-
-
 canvas.addEventListener("wheel", (event) => {
 
     event.preventDefault();
@@ -204,7 +203,7 @@ canvas.addEventListener("wheel", (event) => {
 
 canvas.addEventListener("pointerdown", (event) => {
 
-    event.preventDefault();
+    event.preventDefault()
 
     render.moveCenter(event.offsetX,  event.offsetY)
 
@@ -217,7 +216,7 @@ canvas.addEventListener("pointerdown", (event) => {
 
 canvas.addEventListener("pointermove", (event) => {
 
-    event.preventDefault();
+    event.preventDefault()
 
     const [x,y] = render.getCoordFromCanvas(event.offsetX,  event.offsetY)
 
@@ -231,12 +230,11 @@ canvas.addEventListener("pointermove", (event) => {
 });
 
 window.addEventListener('resize',() => {
-    console.log("resize")
 
     resize(canvas)
 
-    render.canvas.width = canvas.width
-    render.canvas.height = canvas.height
+    render.draw.canvas.width = canvas.width
+    render.draw.canvas.height = canvas.height
 
     render.dynamics()
 })
