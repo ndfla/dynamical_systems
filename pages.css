@@ -68,8 +68,7 @@ nav.navbar {
     /* スマホ専用のCSSを書く場所 */
     
     canvas {    
-        width:350px;
-
+        width: 350px;
         margin-left: auto;
         margin-right: auto;
     }

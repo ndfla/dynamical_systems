@@ -27,7 +27,7 @@ const [canvas, canvasCtx] = createCanvas(UIcontainer)
 
 const initX = 0.5
 
-const initSample = canvas.width
+const initSample = 600
 
 const initIteration = 100
 

@@ -1,6 +1,20 @@
+const resize = function(canvas) {
+    var displayWidth  = canvas.clientWidth;
+    var displayHeight = canvas.clientHeight;
+   
+    if (canvas.width  != displayWidth ||
+        canvas.height != displayHeight) {
+
+      canvas.width  = displayWidth;
+      canvas.height = displayHeight;
+    }
+}
+
 class Canvas {
     constructor(context, color){
         this.context = context
+
+        resize(context.canvas)
 
         this.width = context.canvas.width
         this.height = context.canvas.height
