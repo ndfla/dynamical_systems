@@ -233,6 +233,9 @@ window.addEventListener('resize',() => {
 
     resize(canvas)
 
+    render.camera.canvas.width = canvas.width
+    render.camera.canvas.height = canvas.height
+ 
     render.draw.canvas.width = canvas.width
     render.draw.canvas.height = canvas.height
 
