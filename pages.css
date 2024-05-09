@@ -23,7 +23,6 @@ canvas {
 }
 
 #text-container {
-    position: sticky;
     margin-top: 20px;
 }
 
@@ -52,4 +51,37 @@ canvas {
     position:relative;
     left: 5%;
 
+}
+
+
+nav.navbar {
+    text-align: center;
+    width: 100%;
+    background-color: rgb(241, 249, 255);
+}
+
+@media (max-width: 768px) {
+    /* スマホ専用のCSSを書く場所 */
+    
+    canvas {    
+        width:300px;
+
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #page{
+        left: 0%;
+    
+    }
+}
+
+@media (max-width: 992px) {
+
+    #menu {
+        border-right: none;
+        border-color: black;
+        
+    }
+    
 }

@@ -219,10 +219,25 @@ canvas.addEventListener("pointermove", (event) => {
 
     event.preventDefault();
 
-    [render.param.coordX, render.param.coordY] = render.getCoordFromCanvas(event.offsetX,  event.offsetY)
+    const [x,y] = render.getCoordFromCanvas(event.offsetX,  event.offsetY)
 
+    render.param.coordX = Math.round(x*10**5)/10**5
+
+    render.param.coordY = Math.round(y*10**5)/10**5
 
     text.update()
 
 
 });
+
+window.addEventListener('resize',() => {
+    console.log("resize")
+
+    resize(canvas)
+
+    render.canvas.width = canvas.width
+    render.canvas.height = canvas.height
+
+    render.dynamics()
+})
+ 

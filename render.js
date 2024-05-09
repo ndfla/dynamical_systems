@@ -31,7 +31,7 @@ class Coordinate {
             scaleX: data.scale.x,
             scaleY: data.scale.y,
 
-            coordX:0,
+            coordX: 0,
             coordY: 0
         }
 
@@ -335,6 +335,8 @@ class DynamicalSystem {
     }
 
     dynamics(){
+
+        
 
         this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 

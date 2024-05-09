@@ -29,7 +29,7 @@ class Text {
     update(){
 
         for(let key of Object.keys(this.data)){
-            this.data[key].innerHTML = key + " : " + "<b>"+ String(this.target.param[key]) + "</b>"
+            this.data[key].innerHTML = key + " : " + "<b>"+ String(Math.round(this.target.param[key]*10**5)/10**5) + "</b>"
         }
     }
 }
