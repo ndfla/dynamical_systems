@@ -110,6 +110,13 @@ class Draw {
 
     point(x,y){
 
+        if (x>this.param.centerX+this.camera.width/2 || x<this.param.centerX-this.camera.width/2 ||
+
+            y>this.param.centerY+this.camera.height/2 || y<this.param.centerY-this.camera.height/2
+        ){
+            return
+        }
+
         this.canvas.context.fillStyle = 'white'
             
         x = this.canvas.width*(0.5 + (x-this.param.centerX)/this.camera.width)
@@ -117,7 +124,6 @@ class Draw {
         y = this.canvas.height*(0.5 + (this.param.centerY-y)/this.camera.height)
 
         this.canvas.context.fillRect(x,y,1,1)
-
     }
 
     line(x1,y1,x2,y2, color='gray'){
@@ -236,7 +242,6 @@ class Draw {
 
         this.grid()
 
-        
 
         callback = (x,y) => x**2 + y**2 - 1
 
@@ -359,6 +364,7 @@ class DynamicalSystem {
             let y = this.param.initx
 
             const x = this.normalizeSample(a)
+            console.log(x)
 
             // if (x<=-2.0) continue
 
