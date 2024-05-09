@@ -336,8 +336,6 @@ class DynamicalSystem {
 
     dynamics(){
 
-        
-
         this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
         this.draw.grid()

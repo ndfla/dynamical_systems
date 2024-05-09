@@ -98,7 +98,7 @@ slider.initialize(
         var: "sample",
         min: initSample/2,
         max: initSample*2,
-        value: 600,
+        value: initSample,
         step:3,
     }
 )
@@ -235,6 +235,9 @@ window.addEventListener('resize',() => {
 
     render.draw.canvas.width = canvas.width
     render.draw.canvas.height = canvas.height
+
+    render.canvas.width = canvas.width
+    render.canvas.height = canvas.height
 
     render.dynamics()
 })
