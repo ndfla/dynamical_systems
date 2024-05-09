@@ -1,27 +1,11 @@
-const resize = function(canvas) {
-    var displayWidth  = canvas.clientWidth;
-    var displayHeight = canvas.clientHeight;
-   
-    if (canvas.width  != displayWidth ||
-        canvas.height != displayHeight) {
-
-      canvas.width  = displayWidth;
-      canvas.height = displayHeight;
-    }
-}
-
 class Canvas {
     constructor(context, color){
         this.context = context
-
-        resize(context.canvas)
 
         this.width = context.canvas.width
         this.height = context.canvas.height
         
         this.aspect = this.height/this.width
-
-
 
         context.canvas.style.backgroundColor = typeof color!="undefined" ? color : "black" 
 
@@ -364,7 +348,6 @@ class DynamicalSystem {
             let y = this.param.initx
 
             const x = this.normalizeSample(a)
-            console.log(x)
 
             // if (x<=-2.0) continue
 
