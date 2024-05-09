@@ -2,6 +2,9 @@
     position: relative;
     left: 5%;
     margin: 15px;
+    margin-right: 0px;
+
+    width: 90%;
 }
 
 #heading {
@@ -44,12 +47,13 @@ canvas {
 }
 
 #contents {
-    margin: 3% 0% 0% 3%;
+    margin-left: 3%;
+    margin-right: auto;
 }
 
 #page{
     position:relative;
-    left: 5%;
+    left: 3%;
 
 }
 
@@ -64,24 +68,30 @@ nav.navbar {
     /* スマホ専用のCSSを書く場所 */
     
     canvas {    
-        width:300px;
+        width:350px;
 
         margin-left: auto;
         margin-right: auto;
     }
 
-    #page{
-        left: 0%;
     
-    }
 }
 
 @media (max-width: 992px) {
 
+    #contents {
+        margin-left: 0%;
+        margin-right: 0%;
+    }
+
     #menu {
         border-right: none;
-        border-color: black;
         
+    }
+
+    #page{
+        left: 0%;
+    
     }
     
 }
