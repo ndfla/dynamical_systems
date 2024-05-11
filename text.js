@@ -17,7 +17,8 @@ class Text {
 
         text.className = "lead"
         text.innerHTML = data.info + " : " + "<b>"+ String(this.target.param[data.info]) + "</b>"
-        text.id = data.id
+
+        text.id = typeof data.id == "undefined" ? "" : data.id
 
         container.appendChild(text)
 

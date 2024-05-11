@@ -60,8 +60,13 @@ canvas {
 
 nav.navbar {
     text-align: center;
-    width: 100%;
-    background-color: rgb(241, 249, 255);
+    
+    background-color: rgb(203, 203, 203);
+}
+
+.navbar-toggler {
+    position: relative;
+    right: 5%;
 }
 
 @media (max-width: 768px) {

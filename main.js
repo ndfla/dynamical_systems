@@ -1,69 +1,55 @@
 import { Text, createText } from "./text.js"
 import { createCanvas, resize } from "./drawCanvas.js"
 import { Slider } from "./slider.js"
-import { DynamicalSystem } from "./render.js"
+import { DiscreteDynamicalSystem } from "./render.js"
 
+const addElement = function(target, tag, id){
 
+    const element = document.createElement(tag)
+    element.id = id
+    target.appendChild(element)
 
+    return element
+}
 
 
 const page = document.getElementById("page")
 page.innerHTML = ""
 
+
 createText(page, "h1", "a-y graph of logistic map", "heading")
 
-const UIcontainer = document.createElement("section")
-
-UIcontainer.id = "UIcontainer"
-
-page.appendChild(UIcontainer)
-
-
-
-
+const UIcontainer = addElement(page, "section", "UIcontainer")
 
 const [canvas, canvasCtx] = createCanvas(UIcontainer)
 
-
-const initX = 0.5
-
-const initSample = 600
-
-const initIteration = 100
-
-const initThreshold = 20
-
-const initWidth = 12
-
-
-
-const render = new DynamicalSystem({
+const render = new DiscreteDynamicalSystem({
     context: canvasCtx,
-    center: {x:0, y:0},
-    initwidth: initWidth,
-    magnification: 1,
-    scale:{x:1.0 ,y:1.0},
 
-    sample: initSample,
-    iteration: initIteration,
-    threshold: initThreshold,
-    initx: initX,
+    initwidth: 12.0,
+
+    sample: canvas.width,
+    iteration: 100,
+    threshold: 20,
+    initx: 0.5,
 
     callback: (a,x) => {return a*x*(1-x)}
 
-    // callback: (a,x) => {return Math.sin(x)+a*Math.cos(a*x)}
+    // callback: (a,x) => {return (Math.sin(x)+a*Math.cos(a*x))*a}
 
     // callback: (a,x) => {return (x**3-a/x)*(1 -(x**3-a/x)) }
-
 
     // callback: (a,x) => {return x<0.5 ? a*x : a*(1-x)}
 })
 
+render.param.pointerX = 0.0
+render.param.pointerY = 0.0
 
 render.dynamics()
 
 
 const slider = new Slider(render)
+const text = new Text(render)
 
 
 slider.initialize(
@@ -73,7 +59,6 @@ slider.initialize(
         var: "magnification",
         min: -5,
         max: 40,
-        value: 1,
         step:45,
     }
 )
@@ -85,9 +70,7 @@ slider.initialize(
         var: "initx",
         min: -2,
         max: 2,
-        value: 0.5,
         step:400,
-
     }
 )
 
@@ -96,9 +79,8 @@ slider.initialize(
         id: "slider",
         info: "sample",
         var: "sample",
-        min: initSample/2,
-        max: initSample*2,
-        value: initSample,
+        min: canvas.width/2,
+        max: canvas.width*2,
         step:3,
     }
 )
@@ -110,8 +92,7 @@ slider.initialize(
         var: "iteration",
         min: 10,
         max: 1000,
-        value: initIteration,
-        step:990/10,
+        step:99,
     }
 )
 
@@ -122,7 +103,6 @@ slider.initialize(
         var: "threshold",
         min: 1,
         max: 200,
-        value: initThreshold,
         step:199,
 
     }
@@ -135,36 +115,19 @@ slider.initialize(
         var: "scaleY",
         min: 0.5,
         max: 5.0,
-        value: 1.0,
         step:45,
 
     }
 )
 
-const text = new Text(render)
+text.createText({ info: "centerX" })
 
-text.createText({
-    info: "centerX",
+text.createText({ info: "pointerX",})
 
-    id: ""
-})
+text.createText({ info: "centerY" })
 
-text.createText({
-    info: "coordX",
-    id: ""
-})
+text.createText({ info: "pointerY" })
 
-
-text.createText({
-    info: "centerY",
-    id: ""
-})
-
-
-text.createText({
-    info: "coordY",
-    id: ""
-})
 
 text.container.className = "row row-cols-2 rounded"
 
@@ -180,15 +143,13 @@ canvas.addEventListener("wheel", (event) => {
 
     event.preventDefault();
 
-    let zoom = event.deltaY 
-
-    if (zoom<=-100){
+    if (event.deltaY<=-100){
 
         render.moveCenter(event.offsetX,  event.offsetY)
         render.param.magnification+=1
           
     }
-    else if (zoom>=100){
+    else if (event.deltaY>=100){
 
         render.moveCenter(event.offsetX,  event.offsetY)
         render.param.magnification-=1
@@ -220,14 +181,16 @@ canvas.addEventListener("pointermove", (event) => {
 
     const [x,y] = render.getCoordFromCanvas(event.offsetX,  event.offsetY)
 
-    render.param.coordX = Math.round(x*10**5)/10**5
+    render.param.pointerX = Math.round(x*10**5)/10**5
 
-    render.param.coordY = Math.round(y*10**5)/10**5
+    render.param.pointerY = Math.round(y*10**5)/10**5
 
     text.update()
 
 
 });
+
+canvas.addEventListener("touchmove", (event) => { event.preventDefault() });
 
 window.addEventListener('resize',() => {
 

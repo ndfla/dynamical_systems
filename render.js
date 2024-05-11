@@ -21,16 +21,16 @@ class Coordinate {
 
         this.initwidth = data.initwidth
 
+
+
         this.param = {
-            magnification: data.magnification,
-            centerX: data.center.x,
-            centerY: data.center.y,
+            magnification: typeof data.magnification=="undefined" ? 1.0 : data.magnification,
+            centerX: typeof data.center=="undefined" ? 0.0 : data.center.x,
+            centerY: typeof data.center=="undefined" ? 0.0 : data.center.y,
 
-            scaleX: data.scale.x,
-            scaleY: data.scale.y,
+            scaleX: typeof data.scale=="undefined" ? 1.0 : data.scale.x,
+            scaleY: typeof data.scale=="undefined" ? 1.0 : data.scale.y,
 
-            coordX: 0,
-            coordY: 0
         }
 
     }
@@ -50,7 +50,6 @@ class Coordinate {
         return [x,y]
     }
 }
-
 class Camera {
     constructor(data){  
         this.space = new Coordinate(data)
@@ -58,9 +57,6 @@ class Camera {
         this.param = this.space.param
 
         this.canvas = this.space.canvas
-
-        
-
     } 
 
     get width(){ return this.space.scaledWidth}
@@ -231,32 +227,9 @@ class Draw {
 
         // callback = (x,y) => (x**2 + y**2)**2 - 2*1*(x**2 - y**2) 
 
-        
-
         console.log(this.curvature(callback, 0,0, 0.01))
 
-        // callback = (x,y) => (Math.floor(x)-y)
-
-
-
-
-        // console.log(this.camera.width, this.param.centerX, this.param.centerY)
-
-        // this.quad(0,this.param.centerX, this.param.centerY, this.camera.width, 11)
-
-        
-        // callback = (x,y) => Math.cos(x)* Math.sin(y) + ((x**2 + y**2)**2 - 2*1*(x**2 - y**2))
-
-        // callback = (x,y) => (x**2 + y**2)**2 - 2*1*(x**2 - y**2)
-
-        // callback = (x,y) => (Math.cos(x+y) + Math.sin(x+y))/Math.abs((x-2)**2 + (y-1)**2)-0.5
-
-
-        // callback = (x,y) => (x**2 +(y-4)**3)
-
-
         for(let x=0; x<sample; x++){
-
 
             const _x = this.param.centerX + (x/sample-0.5)*this.camera.width
 
@@ -289,17 +262,66 @@ class Draw {
 
 
     }
+
+    xygraph(callback,sample){
+
+        const d = this.camera.width/sample
+
+        const end = this.param.centerX + 0.5*this.camera.width
+
+        let x = this.param.centerX-0.5*this.camera.width
+
+        const offset = this.param.centerX-0.5*this.camera.width
+
+
+        for(let i=0; i<sample; i++){
+
+            const a = d*(i-0.5) + offset
+            const b = a + d
+
+            let x = a
+
+            for (let k=0; k<this.canvas.height; k++){
+
+                if (!(x>=a && x<b)) break
+
+                const y = callback(x)
+    
+                if (isFinite(y) && !isNaN(y)) {
+    
+                    this.point(x,y)
+    
+                    let c = Math.abs((callback(x+d/100)-callback(x-d/100))/(2*d/100))
+                    
+    
+                    if (isNaN(c)) {
+                        x+=d/this.canvas.height
+                        continue
+                    }
+    
+                    if (c <= 1.0) x+=d/this.canvas.height
+                    else x+=d/c  
+                    
+                }
+                else x+=d/this.canvas.height
+    
+    
+            }
+        }
+
+        
+        
+
+    }
 }
 
 
-class DynamicalSystem {
+class DiscreteDynamicalSystem {
     constructor(data){
 
         this.camera = new Camera(data)
 
         this.draw = new Draw(this.camera)
-
-        
 
         this.canvas = this.camera.canvas
 
@@ -342,7 +364,6 @@ class DynamicalSystem {
         this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
         this.draw.grid()
-
         
         for(let a=0; a<this.param.sample; a++){
             let y = this.param.initx
@@ -361,124 +382,8 @@ class DynamicalSystem {
 
             }
         }
-
-        // for(let a=0; a<this.param.sample; a++){
-        //     for(let b=0; b<this.param.sample; b++){
-
-        //         let x = 0.1
-        //         let y = 0
-
-        //         const A = this.widthScaledSample(a)
-
-        //         const B = this.heightScaledSample(b)
-
-        //         // if (x<=-2.0) continue
-
-        //         // if (x>=4.0) break
-
-        //         for(let i=0; i<this.param.iteration; i++){
-
-        //             // y = this.param.callback(A, B, x, y)
-
-        //             const _x = x 
-        //             const _y = y
-
-        //             y = B*_x
-
-        //             x = 1 - A*_x**2 + _y
-
-        //             if (i>this.param.iteration-this.param.threshold) this.draw(x,y)
-
-        //         }
-        //     }
-        // }
-
     }
 }
 
 
-// const render = {
-
-//     sample: initSample,
-//     n: initIteration,
-//     m: initThreshold,
-//     area: initArea,
-//     position: [3.0, 2/3],
-//     width: initWidth,
-//     aspect:3/4,
-
-
-//     scaleX: 1.0,
-//     scaleY: 1.0,
-
-//     x: initX,
-
-//     scaledSample(a){
-//         return this.position[0]+(a/this.sample-0.5)*this.scaledWidth
-//     },
-
-//     get height(){ return this.aspect*this.width},
-
-//     get scaledWidth(){return this.width/this.scaleX},
-
-//     get scaledHeight(){return this.width*this.aspect/this.scaleY},
-
-//     draw(x,y){
-
-//         canvasCtx.fillStyle = 'white'
-        
-//         x = x/this.sample*canvas.width
-        
-//         y = canvas.height*(0.5 + (this.position[1]-y)/this.scaledHeight)
-
-
-//         canvasCtx.fillRect(x,y,1,1)
-//     },
-
-//     setDrawingArea(){
-
-//         canvasCtx.fillStyle = 'black';
-
-//         const pixelLength = [canvas.width/this.scaledWidth, canvas.height/this.scaledHeight]
-
-//         const initialPoint = {
-//             x: this.area[0] - (this.position[0]-0.5*this.scaledWidth),
-//             y: this.area[1] - (this.position[1]-0.5*this.scaledHeight)
-//         }
-
-//         const canvasInitPoint = {
-//             x: initialPoint.x * pixelLength[0],
-//             y: canvas.height - initialPoint.y * pixelLength[1]
-//         }
-
-//         if (canvasInitPoint.x>canvas.width || canvasInitPoint.y>canvas.height) return
-
-//         const rectWidth = this.area[2]*pixelLength[0]
-
-//         const rectHeight = this.area[3]*pixelLength[1]
-
-//         const X = canvasInitPoint.x < 0 ? [0, canvasInitPoint.x + rectWidth] : [canvasInitPoint.x, rectWidth]
-
-//         const Y = canvasInitPoint.y < 0 ? [0, canvasInitPoint.y + rectHeight] : [canvasInitPoint.y, rectHeight]
-
-//         canvasCtx.fillRect(X[0], Y[0], X[1], Y[1])
-//     },
-
-//     getCoordFromCanvas(x,y){
-
-//         x = this.position[0] + this.scaledWidth*(x/canvas.width-0.5)
-
-//         y = this.position[1] + this.scaledHeight*(0.5-y/canvas.height)
-
-//         return [x, y]
-    
-//     },
-
-//     movePositon(x,y){
-//         this.position = this.getCoordFromCanvas(x, y)
-
-//         return this.position
-//     }
-// }
-
-export {DynamicalSystem}
+export { DiscreteDynamicalSystem }

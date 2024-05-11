@@ -38,9 +38,9 @@ class Slider {
         
         slider.min = 0
         slider.max = data.step
-        slider.value = data.step/(data.max-data.min) * (data.value-data.min)
+        slider.value = data.step/(data.max-data.min) * (this.target.param[data.var]-data.min)
 
-        sliderInfo.innerHTML = data.info + ": " +"<b>"+ String(data.value) + "</b>"
+        sliderInfo.innerHTML = data.info + ": " +"<b>"+ String(this.target.param[data.var]) + "</b>"
 
         
         // sliderInfo.appendChild()
