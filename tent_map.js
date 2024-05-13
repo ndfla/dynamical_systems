@@ -5,7 +5,7 @@ import { Slider } from "./slider.js"
 import { DiscreteDynamicalSystem } from "./render.js"
 
 
-document.getElementById("logistic").onclick = () => {
+document.getElementById("tent").onclick = () => {
 
     const page = document.getElementById("page")
     page.innerHTML = ""
@@ -29,12 +29,7 @@ document.getElementById("logistic").onclick = () => {
         threshold: 20,
         initx: 0.5,
 
-        callback: (a,x) => {return a*x*(1-x)},
-
-        // domain: (x) => {return (x<4 && x>=-2)}
-
-        // callback: (a,x) => {return (Math.sin(x)+a*Math.cos(a*x))*a}
-        // callback: (a,x) => {return (x**3-a/x)*(1 -(x**3-a/x)) }
+        callback: (a,x) => {return a*Math.min(x, 1-x)},
     })
 
     render.param.pointerX = 0.0

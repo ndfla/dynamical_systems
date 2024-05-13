@@ -1,30 +1,23 @@
+import { Element } from "./element.js"
 class Text {
-    constructor(target){
+    constructor(target, container, attribute){
 
         this.target = target
-
         this.data = {}
 
-        this.container = document.createElement("div")
-        this.container.id = "text-container"
+        this.container = Element.create(container, "div", attribute)
     }
 
     createText(data){
 
-        const container = document.createElement("div")
+        const container = Element.create(this.container, "div")
 
-        const text = document.createElement("p")
+        const text = Element.create(container, "p", {id: data.id})
 
         text.className = "lead"
         text.innerHTML = data.info + " : " + "<b>"+ String(this.target.param[data.info]) + "</b>"
 
-        text.id = typeof data.id == "undefined" ? "" : data.id
-
-        container.appendChild(text)
-
         this.data[data.info] = text
-
-        this.container.appendChild(container)
     }
 
     update(){
@@ -35,19 +28,4 @@ class Text {
     }
 }
 
-
-const createText = function(container, tag, content, id){
-
-    const text = document.createElement(tag)
-    text.textContent = content
-    text.id = id
-  
-    container.appendChild(text)
-  
-    return text
-  
-  }
-
-
-
-  export { Text,createText };
+export { Text };

@@ -13,15 +13,12 @@ const resize = function(canvas) {
 const createCanvas = function(container){
 
   const canvas = document.createElement("canvas")
-  // canvas.className = "center-block"
-  
 
   container.appendChild(canvas)
 
   resize(canvas)
 
   return [canvas, canvas.getContext("2d")]
-
 }
 
 

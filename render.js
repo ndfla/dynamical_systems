@@ -8,20 +8,18 @@ class Canvas {
         this.aspect = this.height/this.width
 
         context.canvas.style.backgroundColor = typeof color!="undefined" ? color : "black" 
-
     }
 }
 
 
 class Coordinate {
 
-    constructor(data){
+    #initwidth
 
+    constructor(data){
         this.canvas = new Canvas(data.context, data.backgroundColor)
 
-        this.initwidth = data.initwidth
-
-
+        this.#initwidth = data.initwidth
 
         this.param = {
             magnification: typeof data.magnification=="undefined" ? 1.0 : data.magnification,
@@ -30,12 +28,10 @@ class Coordinate {
 
             scaleX: typeof data.scale=="undefined" ? 1.0 : data.scale.x,
             scaleY: typeof data.scale=="undefined" ? 1.0 : data.scale.y,
-
         }
-
     }
 
-    get width(){ return (this.initwidth/2**(this.param.magnification-1))}
+    get width(){ return (this.#initwidth/2**(this.param.magnification-1))}
 
     get scaledWidth(){return this.width/this.param.scaleX }
 
@@ -52,35 +48,30 @@ class Coordinate {
 }
 class Camera {
     constructor(data){  
-        this.space = new Coordinate(data)
+        this.coord = new Coordinate(data)
 
-        this.param = this.space.param
+        this.param = this.coord.param
 
-        this.canvas = this.space.canvas
+        this.canvas = this.coord.canvas
     } 
 
-    get width(){ return this.space.scaledWidth}
+    get width(){ return this.coord.scaledWidth}
 
-    get height(){ return this.space.scaledHeight}
+    get height(){ return this.coord.scaledHeight}
 
     getCoordFromCanvas(x,y){
-        return this.space.getCoordFromCanvas(x,y)
+        return this.coord.getCoordFromCanvas(x,y)
     }
 
     moveCenter(x,y) {
-
         [this.param.centerX, this.param.centerY] = this.getCoordFromCanvas(x, y)
     }
-
 }
 
 class Draw {
     constructor(camera){
-
         this.camera = camera
-
         this.canvas = camera.canvas
-
         this.param = camera.param
     }
 
@@ -88,20 +79,30 @@ class Draw {
 
     get pixelLengthY() { return this.canvas.height/this.camera.height}
 
+    coordToCanvasX(x){
+        return this.canvas.width*(0.5 + (x-this.param.centerX)/this.camera.width)
+    }
+
+    coordToCanvasY(y){
+        return this.canvas.height*(0.5 - (y-this.param.centerY)/this.camera.height)
+    }
+
     point(x,y){
 
-        if (x>this.param.centerX+this.camera.width/2 || x<this.param.centerX-this.camera.width/2 ||
-
-            y>this.param.centerY+this.camera.height/2 || y<this.param.centerY-this.camera.height/2
-        ){
-            return
+        const r = {
+            x: this.camera.width/2,
+            y: this.camera.height/2
         }
+
+        if (x>this.param.centerX+r.x || x<this.param.centerX-r.x ||
+            y>this.param.centerY+r.y || y<this.param.centerY-r.y
+        ) return
 
         this.canvas.context.fillStyle = 'white'
             
-        x = this.canvas.width*(0.5 + (x-this.param.centerX)/this.camera.width)
+        x = this.coordToCanvasX(x)
         
-        y = this.canvas.height*(0.5 + (this.param.centerY-y)/this.camera.height)
+        y = this.coordToCanvasY(y)
 
         this.canvas.context.fillRect(x,y,1,1)
     }
@@ -110,21 +111,17 @@ class Draw {
 
         this.canvas.context.strokeStyle = color
 
-        
         this.canvas.context.beginPath()
 
         this.canvas.context.moveTo(
-            this.canvas.width*(0.5 + (x1-this.param.centerX)/this.camera.width),
-            this.canvas.height*(0.5 + (this.param.centerY-y1)/this.camera.height)
+            this.coordToCanvasX(x1),
+            this.coordToCanvasY(y1),
         )
 
         this.canvas.context.lineTo(
-            this.canvas.width*(0.5 + (x2-this.param.centerX)/this.camera.width),
-            this.canvas.height*(0.5 + (this.param.centerY-y2)/this.camera.height)
-
+            this.coordToCanvasX(x2),
+            this.coordToCanvasY(y2),
         )
-
-        
 
         this.canvas.context.stroke()
 
@@ -133,43 +130,29 @@ class Draw {
     rect(x,y, width, height){
 
         this.canvas.context.fillStyle = 'black';
-        
 
-        const initialPoint = {
-            x: x - (this.param.centerX-0.5*this.camera.width),
-            y: y - (this.param.centerY-0.5*this.camera.height)
-        }
-        
-        const canvasInitPoint = {
-            x: initialPoint.x * this.pixelLengthX,
-            y: this.canvas.height - initialPoint.y * this.pixelLengthY
-        }
-        
-        if (canvasInitPoint.x>this.canvas.width || canvasInitPoint.y>this.canvas.height) return
-        
-        const rectWidth = width*this.pixelLengthX
-        
-        const rectHeight = height*this.pixelLengthY
-        
-        const X = canvasInitPoint.x < 0 ? [0, canvasInitPoint.x + rectWidth] : [canvasInitPoint.x, rectWidth]
-        
-        const Y = canvasInitPoint.y < 0 ? [0, canvasInitPoint.y + rectHeight] : [canvasInitPoint.y, rectHeight]
-        
-        this.canvas.context.fillRect(X[0], Y[0], Math.min(X[1],this.canvas.width), Math.min(Y[1],this.canvas.height))
+        const x1 = this.coordToCanvasX(x)
+        const y1 = this.coordToCanvasY(y)
+
+
+        width = this.coordToCanvasX(x+width)-x1
+        height = y1-this.coordToCanvasY(y+height)
+
+        this.canvas.context.fillRect(
+            Math.max(x1, 0.0), 
+            Math.max(y1, 0.0), 
+            Math.min(width+Math.min(x1, 0.0), this.canvas.width), 
+            Math.min(height+Math.min(y1, 0.0), this.canvas.height)
+        )
     }
-
-  
 
     diff(callback,h){
         return (a) => (callback(a+h)-callback(a-h))/(2*h)
 
     }
-
     grid(){
 
-
         const k = this.camera.width<50 ? 1.0 : 5*10**(Math.floor(Math.log10(this.camera.width/5.0)-1.0))
-
 
         const l = this.param.centerX - this.camera.width/2
 
@@ -198,7 +181,6 @@ class Draw {
             else this.line(l, t, l+this.camera.width, t)
 
             t+=k
-
         }
     }
 
@@ -219,9 +201,6 @@ class Draw {
     }
 
     graphImplicit(callback, sample){
-
-        this.grid()
-
 
         callback = (x,y) => x**2 + y**2 - 1
 
@@ -254,25 +233,15 @@ class Draw {
                 const rd = Math.sign(callback(rx, dy))
 
                 if (!(lu==ru && ld==rd && lu==ld)) this.point(_x, _y)
-
-                
-
             }
         }
-
-
     }
 
     xygraph(callback,sample){
 
         const d = this.camera.width/sample
 
-        const end = this.param.centerX + 0.5*this.camera.width
-
-        let x = this.param.centerX-0.5*this.camera.width
-
         const offset = this.param.centerX-0.5*this.camera.width
-
 
         for(let i=0; i<sample; i++){
 
@@ -304,14 +273,8 @@ class Draw {
                     
                 }
                 else x+=d/this.canvas.height
-    
-    
             }
         }
-
-        
-        
-
     }
 }
 
@@ -333,6 +296,9 @@ class DiscreteDynamicalSystem {
         this.param.sample = data.sample
         this.param.callback = data.callback
 
+        this.param.domain = data.domain
+
+        
     }
 
     get width(){ return this.camera.width}
@@ -350,16 +316,8 @@ class DiscreteDynamicalSystem {
     moveCenter(x,y) {
         this.camera.moveCenter(x,y)
     }
-     
-    point(x,y){
-        this.draw.point(x,y)
-    }
 
-    rect(x,y,w,h){
-        this.draw.rect(x,y,w,h)
-    }
-
-    dynamics(){
+    plot(){
 
         this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
@@ -370,16 +328,14 @@ class DiscreteDynamicalSystem {
 
             const x = this.normalizeSample(a)
 
-            // if (x<=-2.0) continue
+            if (typeof this.param.domain!="undefined" && !this.param.domain(x)) continue
 
-            // if (x>=4.0) break
 
             for(let i=0; i<this.param.iteration; i++){
 
                 y = this.param.callback(x,y)
 
-                if (i>this.param.iteration-this.param.threshold) this.point(x,y)
-
+                if (i>=this.param.iteration-this.param.threshold) this.draw.point(x,y)
             }
         }
     }

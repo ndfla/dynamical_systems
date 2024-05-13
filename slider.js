@@ -1,32 +1,24 @@
+import { Element } from "./element.js"
 
 class Slider {
-    constructor(target){
+    constructor(target,container, attribute){
 
         this.target = target
 
         this.sliderData = {}
 
-        this.container = document.createElement("div")
-        this.container.id = "slider-container"
+        this.container = Element.create(container, "div", attribute)
     }
 
     createSlider(){
-        const slider = document.createElement("input")
-        slider.type = "range"
 
-        const sliderInfo = document.createElement("h5")
+        const container = Element.create(this.container, "div")
 
-        sliderInfo.className = "lead"
+        const sliderInfo = Element.create(container, "h5", {className: "lead"})
 
-        const container = document.createElement("div")
-
-        container.appendChild(sliderInfo)
-        container.appendChild(slider)
-
-        this.container.appendChild(container)
+        const slider = Element.create(container, "input", {type: "range"})
 
         return [slider, sliderInfo]
-
     }
 
     initialize(data){
@@ -34,17 +26,16 @@ class Slider {
         const [slider, sliderInfo] = this.createSlider()
 
 
-        slider.id = data.id
-        
-        slider.min = 0
-        slider.max = data.step
-        slider.value = data.step/(data.max-data.min) * (this.target.param[data.var]-data.min)
+        Element.update(slider,
+            {
+                id: data.id,
+                min: 0,
+                max: data.step,
+                value: data.step/(data.max-data.min) * (this.target.param[data.var]-data.min)
+            }
+        )
 
         sliderInfo.innerHTML = data.info + ": " +"<b>"+ String(this.target.param[data.var]) + "</b>"
-
-        
-        // sliderInfo.appendChild()
-
 
         slider.addEventListener('input', (e) => {
 
@@ -54,7 +45,7 @@ class Slider {
 
             sliderInfo.innerHTML = data.info + ": " + "<b>"+ String(absoluteScale) +"</b>"
             
-            this.target.dynamics()
+            this.target.plot()
 
         })
 
@@ -65,7 +56,6 @@ class Slider {
         }
 
         return 
-
     }
 
     update(variable){
@@ -79,13 +69,10 @@ class Slider {
 
         slider.value = Math.round((data.step*(this.target.param[data.var]-data.min)/(data.max-data.min))*10**3)/10**3
 
-
         info.innerHTML = data.info + ": " + "<b>" +  String(this.target.param[variable]) + "</b>"
         
     }
 }
-
-
 
 
 export { Slider };
