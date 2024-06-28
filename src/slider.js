@@ -28,7 +28,7 @@ class Slider {
 
         Element.update(slider,
             {
-                id: data.id,
+                id: "id" in data ? data.id : "slider",
                 min: 0,
                 max: data.step,
                 value: data.step/(data.max-data.min) * (this.target.param[data.var]-data.min)
@@ -54,7 +54,6 @@ class Slider {
             info: sliderInfo,
             data: data
         }
-
         return 
     }
 

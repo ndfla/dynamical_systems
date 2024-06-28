@@ -1,3 +1,6 @@
+import {rungeKutta, adams} from "./runge.js"
+import { explicitGraph } from "./explicit_function.js"
+
 class Canvas {
     constructor(context, color){
         this.context = context
@@ -87,7 +90,19 @@ class Draw {
         return this.canvas.height*(0.5 - (y-this.param.centerY)/this.camera.height)
     }
 
-    point(x,y){
+    localPoint(x,y,r,color='red'){
+
+        this.canvas.context.fillStyle = color
+        
+        x = this.coordToCanvasX(x)
+        y = this.coordToCanvasY(y)
+
+        this.canvas.context.beginPath();
+        this.canvas.context.arc(x, y, r, 0, 2*Math.PI);
+        this.canvas.context.fill();
+    }
+
+    point(x,y, color='white'){
 
         const r = {
             x: this.camera.width/2,
@@ -107,21 +122,24 @@ class Draw {
         this.canvas.context.fillRect(x,y,1,1)
     }
 
-    line(x1,y1,x2,y2, color='gray'){
+    line(x1,y1,x2,y2, color='gray', width=1){
+
+        x1 = this.coordToCanvasX(x1)
+        y1 = this.coordToCanvasY(y1)
+        x2 = this.coordToCanvasX(x2)
+        y2 = this.coordToCanvasY(y2)
+
+        y1 = Math.abs(y1) > 2*this.canvas.height ? Math.sign(y1)*2*this.canvas.height : y1
+        y2 = Math.abs(y2) > 2*this.canvas.height ? Math.sign(y2)*2*this.canvas.height : y2
 
         this.canvas.context.strokeStyle = color
 
+        this.canvas.context.lineWidth = width
+
         this.canvas.context.beginPath()
 
-        this.canvas.context.moveTo(
-            this.coordToCanvasX(x1),
-            this.coordToCanvasY(y1),
-        )
-
-        this.canvas.context.lineTo(
-            this.coordToCanvasX(x2),
-            this.coordToCanvasY(y2),
-        )
+        this.canvas.context.moveTo(x1,y1)
+        this.canvas.context.lineTo(x2,y2)
 
         this.canvas.context.stroke()
 
@@ -184,97 +202,68 @@ class Draw {
         }
     }
 
-    curvature(f,x,y,h){
-        const fx = (x,y) => (f(x+h,y)-f(x-h,y))/(2*h)
+    id(){
 
-        const fy = (x,y) => (f(x,y+h)-f(x,y-h))/(2*h)
+        const callback = (x,y) => x-y
 
-        const fxx = (x,y) => (fx(x+h,y)-fx(x-h,y))/(2*h)
+        const pixlenX = 1/this.pixelLengthX
+        
+        const pixlenY = 1/this.pixelLengthY
 
-        const fyy = (x,y) => (fy(x,y+h)-fy(x,y-h))/(2*h)
+        let _x = this.param.centerX - 0.5*this.camera.width
 
-        const fxy = (x,y) => (fx(x,y+h)-fx(x,y-h))/(2*h)
+        console.log(pixlenX, pixlenY, _x)
+
+        for(let x=0; x<this.canvas.width; x++){
 
 
-        const radius = (x,y) => Math.sqrt(fx(x,y)**2 + fy(x,y)**2)**3/(fxx(x,y)*fy(x,y)**2 - 2*fxy(x,y)*fx(x,y)*fy(x,y) + fyy(x,y)*fx(x,y)**2)
-        return radius(x,y)
-    }
+            const lx = _x - 0.5*pixlenX
+            const rx = _x + 0.5*pixlenX
 
-    graphImplicit(callback, sample){
+            let _y = this.param.centerY + 0.5*this.camera.height
 
-        callback = (x,y) => x**2 + y**2 - 1
+            for(let y=0; y<this.canvas.height; y++){
 
-        // callback = (x,y) => (x**2 + y**2)**2 - 2*1*(x**2 - y**2) 
-
-        console.log(this.curvature(callback, 0,0, 0.01))
-
-        for(let x=0; x<sample; x++){
-
-            const _x = this.param.centerX + (x/sample-0.5)*this.camera.width
-
-            const lx = this.param.centerX + ((x-0.5)/sample-0.5)*this.camera.width 
-
-            const rx= this.param.centerX + ((x+0.5)/sample-0.5)*this.camera.width 
-  
-            for(let y=0; y<sample*this.canvas.aspect; y++){
-
-                const _y = this.param.centerY + (0.5 - y/(sample*this.canvas.aspect))*this.camera.height
-
-                const uy = this.param.centerY + (0.5 - (y+0.5)/(sample*this.canvas.aspect))*this.camera.height
-
-                const dy = this.param.centerY + (0.5 - (y-0.5)/(sample*this.canvas.aspect))*this.camera.height
+                const uy = _y - 0.5*pixlenY
+                const dy = _y + 0.5*pixlenY
 
                 const lu = Math.sign(callback(lx, uy))
-
                 const ru = Math.sign(callback(rx, uy))
-
                 const ld = Math.sign(callback(lx, dy))
-
                 const rd = Math.sign(callback(rx, dy))
 
                 if (!(lu==ru && ld==rd && lu==ld)) this.point(_x, _y)
+
+                _y -= pixlenY
             }
+
+            _x += pixlenX
         }
     }
 
-    xygraph(callback,sample){
+    explicit(callback){
 
-        const d = this.camera.width/sample
+        const lineWidth = 3
+        const color = "ghostwhite"
 
-        const offset = this.param.centerX-0.5*this.camera.width
+        const h = 1/this.pixelLengthX
 
-        for(let i=0; i<sample; i++){
+        const _x = this.param.centerX - 0.5*this.camera.width
+        
+        const data = explicitGraph(callback, h, _x, this.canvas.width)
 
-            const a = d*(i-0.5) + offset
-            const b = a + d
+        for (let i=0; i<data.length-1; i++){
 
-            let x = a
+            if (data[i+1]=="discontinuity") continue
 
-            for (let k=0; k<this.canvas.height; k++){
+            else if (data[i]=="discontinuity") continue
 
-                if (!(x>=a && x<b)) break
-
-                const y = callback(x)
-    
-                if (isFinite(y) && !isNaN(y)) {
-    
-                    this.point(x,y)
-    
-                    let c = Math.abs((callback(x+d/100)-callback(x-d/100))/(2*d/100))
-                    
-    
-                    if (isNaN(c)) {
-                        x+=d/this.canvas.height
-                        continue
-                    }
-    
-                    if (c <= 1.0) x+=d/this.canvas.height
-                    else x+=d/c  
-                    
-                }
-                else x+=d/this.canvas.height
-            }
+            else this.line(data[i][0], data[i][1], data[i+1][0], data[i+1][1], color, lineWidth)
         }
+
+        if (data[data.length-2]=="discontinuity") return
+        
+        else this.line(data[data.length-2][0], data[data.length-2][1], data[data.length-1][0], data[data.length-1][1], color,lineWidth)
     }
 }
 
@@ -293,8 +282,9 @@ class DiscreteDynamicalSystem {
         this.param.iteration = data.iteration
         this.param.threshold = data.threshold
         this.param.initx = data.initx
-        this.param.sample = data.sample
-        this.param.callback = data.callback
+
+        this.param.sample = 'sample' in data ? data.sample : this.canvas.width
+        this.map = data.map
 
         this.param.domain = data.domain
 
@@ -333,7 +323,7 @@ class DiscreteDynamicalSystem {
 
             for(let i=0; i<this.param.iteration; i++){
 
-                y = this.param.callback(x,y)
+                y = this.map(x,y)
 
                 if (i>=this.param.iteration-this.param.threshold) this.draw.point(x,y)
             }
@@ -341,5 +331,144 @@ class DiscreteDynamicalSystem {
     }
 }
 
+class VectorField {
+    constructor(data){
 
-export { DiscreteDynamicalSystem }
+        this.camera = new Camera(data)
+
+        this.draw = new Draw(this.camera)
+
+        this.canvas = this.camera.canvas
+
+        this.param = this.camera.param
+
+        this.param.initx = data.initx
+        this.param.inity = data.inity
+        this.param.length = data.length
+        this.param.sample = data.sample
+
+        this.param.fx = data.fx
+        this.param.fy = data.fy
+        this.param.h = data.h
+
+        this.param.domain = data.domain
+
+    }
+
+    get width(){ return this.camera.width}
+
+    get height(){ return this.camera.height}
+
+    normalizeSample(a){
+        return this.param.centerX + (a/this.param.sample-0.5)*this.width
+    }
+
+    getCoordFromCanvas(x,y){
+        return this.camera.getCoordFromCanvas(x,y)
+    }
+
+    moveCenter(x,y) {
+        this.camera.moveCenter(x,y)
+    }
+
+    plot(){
+
+        this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+        this.draw.grid()
+
+        // this.draw.vectorField(this.param.fx,this.param.fy)
+        
+        let points = adams(
+            this.param.initx,
+            this.param.inity,
+            this.param.fx, 
+            this.param.fy,
+            0,
+            this.param.h,
+            this.param.sample
+        )
+
+        for(let i=0;i<points.length-1;i++) this.draw.line(points[i][0],points[i][1],points[i+1][0],points[i+1][1], 'white')
+
+        this.draw.localPoint(this.param.initx, this.param.inity,3)
+
+    }
+}
+
+class Cobweb {
+    constructor(data){
+
+        this.camera = new Camera(data)
+
+        this.draw = new Draw(this.camera)
+
+        this.canvas = this.camera.canvas
+
+        this.param = this.camera.param
+
+        this.param.iteration = data.iteration
+
+        this.param.a = data.a
+        this.param.x = data.x
+
+        this.param.sample = data.sample
+        this.map = data.map
+
+        this.param.transparency = data.transparency
+
+        
+    }
+
+    get width(){ return this.camera.width}
+
+    get height(){ return this.camera.height}
+
+    normalizeSample(a){
+        return this.param.centerX + (a/this.param.sample-0.5)*this.width
+    }
+
+    getCoordFromCanvas(x,y){
+        return this.camera.getCoordFromCanvas(x,y)
+    }
+
+    moveCenter(x,y) {
+        this.camera.moveCenter(x,y)
+    }
+
+    plot(){
+
+        this.canvas.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+        this.draw.grid()
+
+        const f = (x) => this.map(this.param.a, x)
+
+        this.draw.explicit(x=>x)
+        this.draw.explicit(x=>f(x))
+
+        this.draw.localPoint(this.param.x,0,3)
+
+        let x = this.param.x
+        let y = 0
+
+        for (let i=0; i<this.param.iteration; i++){
+
+            const y_ = f(x)
+            this.draw.line(x, y, x, y_, `rgba(255,127,80, ${ this.param.transparency })`, 2)
+
+            this.draw.line(x, y_,y_,y_, `rgba(255,127,80, ${ this.param.transparency })`, 2)
+
+            x = y_
+            y = y_
+        }
+        
+        // this.draw.explicit(x=>-Math.tan(x))
+
+        // this.draw.explicit(x=>1/x - Math.floor(1/x))
+        // this.draw.explicit(x=>Math.sin(1/x) )
+    }
+}
+
+
+export { DiscreteDynamicalSystem, VectorField,Cobweb }
