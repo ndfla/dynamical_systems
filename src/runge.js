@@ -1,68 +1,24 @@
 
-const r4 = (xn,yn,f,tn,h) => {
+const r4 = (variables, f, h) => {
 
-    // let k1 = h*f(tn,xn,yn) 
+    const k1 = h*f(...variables) 
 
-    // let k2 = h*f(tn+h/2, xn+k1/2, yn+k1/2)
+    const k2 = h*f(...(variables.map((v) => v + k1/2)))
 
-    // let k3 = h*f(tn+h/2, xn+k2/2, yn+k2/2)
+    const k3 = h*f(...(variables.map((v) => v + k2/2)))
 
-    // let k4 = h*f(tn+h, xn+k3, yn+k3)
-
-    let k1 = h*f(xn,yn) 
-
-    let k2 = h*f(xn+k1/2, yn+k1/2)
-
-    let k3 = h*f(xn+k2/2, yn+k2/2)
-
-    let k4 = h*f(xn+k3, yn+k3)
+    const k4 = h*f(...(variables.map((v) => v + k3)))
 
     return (k1 + 2*k2 + 2*k3 + k4)/6
-
 }
-const rungeKutta = function(fx, fy, h, length, init = [0,0]){
-
-    let tn = 0
-    let xn = init[0]
-    let yn = init[1]
-
-    const forward = [[xn,yn]]
-    const backward = []
-
-    while(tn<length){
-
-        tn += h
-        xn += r4(xn,yn,fx,tn,h)
-        yn += r4(xn,yn,fy,tn,h)
-
-        forward.push([xn,yn])
-    }
-
-    h = -h
-    tn = 0
-    xn = init[0]
-    yn = init[1]
-
-    while(tn>-length){
-
-        tn += h
-        xn += r4(xn,yn,fx,tn,h)
-        yn += r4(xn,yn,fy,tn,h)
-
-        backward.push([xn,yn])
-    }
-
-    return (backward.reverse()).concat(forward)
-}
-
 
 const dot = (v1, v2) => (v1.map((value,i) => value*v2(i))).reduce(
     (sum, element) => sum+element, 0)
 
 
-const initPoints = (x,y,fx,fy,t,h,step) => {
+const initPoints = (variables, equations, h, step) => {
 
-    const init = [x,y]
+    const init = variables
 
     const forward = []
     const backward = []
@@ -74,26 +30,27 @@ const initPoints = (x,y,fx,fy,t,h,step) => {
     // forward orbit
 
     for(let i=0; i<n*split; i++){
-        const x_ = x + r4(x,y,fx,t,h/split)
-        const y_ = y + r4(x,y,fy,t,h/split);
 
-        [x,y] = [x_, y_]
 
-        if (i%split==split-1) forward.push([x,y])
+        const v_ = variables.map((v,i) => v + r4(variables, equations[i], h/split)) 
+
+        variables = v_
+
+        if (i%split==split-1) forward.push(variables)
     }
 
-    x = init[0]
-    y = init[1]
+
+    variables = init
 
     // backward orbit
 
     for(let i=0; i<n*split; i++){
-        const x_ = x + r4(x,y,fx,t,-h/split)
-        const y_ = y + r4(x,y,fy,t,-h/split);
 
-        [x,y] = [x_, y_]
+        const v_ = variables.map((v,i) => v + r4(variables, equations[i], -h/split)) 
+        
+        variables = v_
 
-        if (i%split==split-1) backward.push([x,y])
+        if (i%split==split-1) backward.push(variables)
     }
 
     backward.reverse().push(init)
@@ -107,64 +64,88 @@ const beta6 = [-475/1440, 2877/1440, -7298/1440, 9982/1440, -7923/1440, 4277/144
 
 
 
-const adamsBashforth = ([x,y], [fx,fy], data, t, h, sample) => {
+const adamsBashforth = (variables, equations, data, h, sample) => {
 
     const orbit = []
 
     for(let i=0; i<sample; i++){
 
-        const x_ = x + h*dot(beta6, (k) => data[k][0])
-        const y_ = y + h*dot(beta6, (k) => data[k][1])
+        const v_ = variables.map((v,i) => v + h*dot(beta6, (k) => data[k][i]))
 
-        t += h;
+        variables = v_
 
-        [x,y] = [x_, y_];
+        orbit.push(variables)
 
-        orbit.push([x,y])
-
-        data.unshift([fx(x,y), fy(x,y)])
+        data.unshift(equations.map((f) => f(...variables)))
         data.pop()
     }
 
     return orbit
 }
 
-
-const adams = (x,y,fx,fy,t,h,sample) => {
+const adams = (variables, equations, h,sample, forward=0) => {
 
     const step = 6
 
-    const points = initPoints(x,y,fx,fy,t,h,step)
+    const points = initPoints(variables, equations, h, step)
 
-    t = (points.length >> 1)*h
+    // console.log(points)
+
+
+    // console.log(points.slice(-(step >> 1)-1,points.length))
+    // t = (points.length >> 1)*h
 
     const forwardOrbit = adamsBashforth( 
-        points[points.length-1], 
-        [fx, fy], 
-        points.slice(-step, points.length).reverse().map((v,i) => [fx(v[0],v[1]), fy(v[0],v[1])]),
-        t,
+        points[points.length-1],
+        equations, 
+        points.slice(-step,points.length).reverse().map((v,i) => equations.map((f) => f(...v)) ),
         h,
         sample
     )
 
+    if (forward==1){
+        return points.slice(-(step >> 1)-1,points.length).concat(forwardOrbit)
+    }
+
     const backwardOrbit = adamsBashforth(
-        points[0], 
-        [fx, fy], 
-        points.slice(0,step).map((v,i) => [fx(v[0],v[1]), fy(v[0],v[1])]),
-        -t,
+        points[0],
+        equations, 
+        points.slice(0,step).map((v,i) => equations.map((f) => f(...v)) ),
         -h,
         sample
     )
 
+    // points.reverse()
     backwardOrbit.reverse()
+
+
+    // console.log(points.concat(forwardOrbit))
     
     return backwardOrbit.concat(points.concat(forwardOrbit))
 }
 
 
-// let [x,y,t,h] = [10,0,0,0.01]
+// let [x,y,t,h] = [1,0,0,0.01]
 
-// adams(x,y,(t,x,y)=>-y, (t,x,y)=>x, 0.1, t)
+// const d =adams([x,y], [(x,y)=>-y, (x,y)=>x], 0.01,500)
+
+// console.log(d.map((v) => v[0]**2 + v[1]**2))
+
+// const fx = (x,y,z) => 10*(y-x)
+// const fy = (x,y,z) => x*(28-z)-y
+// const fz = (x,y,z) => x*y-(8/3)*z
+
+
+// const d =adams([1,1,1], [fx, fy, fz], 0.01,10)
+
+// const d = adams([1,0,1], [(x,y,z)=> 1, (x,y,z)=>z, (x,y,z)=>-y], 0.01,400,1)
+
+
+// // const d = adams([1], [(x) => x], 0.1,50)
+
+// console.log(d)
+// console.log(d.map((v)=> v[2]**2+v[1]**2))
+
 
 
 // while(t<20){
@@ -173,5 +154,4 @@ const adams = (x,y,fx,fy,t,h,sample) => {
 // }
 
 
-
-export { rungeKutta, adams }
+export { adams }

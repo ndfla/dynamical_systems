@@ -1,21 +1,30 @@
 
 import { Text } from "./text.js"
 import { Element } from "./element.js"
-import { createCanvas, resize } from "./canvas.js"
+import { resize } from "./canvas.js"
 import { Slider } from "./slider.js"
-import { DiscreteDynamicalSystem, VectorField, Cobweb } from "./render.js"
-import { createKatexEquation, createKatexText } from "./katex.js"
+import { DiscreteDynamicalSystem, VectorField, Cobweb, Lissajous, Lorentz, Mandelbrot } from "./render.js"
+import { createKatexEquation} from "./katex.js"
 
 const draw = {
     DDS: (data) => new DiscreteDynamicalSystem(data),
     VF: (data) => new VectorField(data),
-    CW: (data) => new Cobweb(data)
+    CW: (data) => new Cobweb(data),
+    LC: (data) => new Lissajous(data),
+    LS: (data) => new Lorentz(data),
+    MB: (data) => new Mandelbrot(data)
 }
+
+const controller = new AbortController()
 
 const loadPage = (json) => {
 
-    const page = document.getElementById("page")
-    page.innerHTML = ""
+    const oldpage = document.getElementById("page")
+
+    const page = oldpage.cloneNode(false)
+
+    oldpage.parentNode.replaceChild(page,oldpage)
+
 
     const header = Element.create(page, "section",{id: "header",className:"text-wrap"})
 
@@ -32,10 +41,13 @@ const loadPage = (json) => {
     
         const UIcontainer = Element.create(page, "section",{id: "UIcontainer"})
 
-        const [canvas, canvasCtx] = createCanvas(UIcontainer)
+
+        const canvasContainer = Element.create(UIcontainer, "div",{})
+
 
         const data = json.UIcontainer.canvas.data
-        data.context = canvasCtx
+        
+        data.container = canvasContainer
 
         const render = draw[json.UIcontainer.canvas.type](data)
 
@@ -61,67 +73,76 @@ const loadPage = (json) => {
             text.createText({ info: textData })
         }
 
-
-        canvas.addEventListener("wheel", (event) => {
-
-            event.preventDefault();
-    
-            if (event.deltaY<=-100){
-    
-                render.moveCenter(event.offsetX,  event.offsetY)
-                render.param.magnification+=1   
-            }
-
-            else if (event.deltaY>=100){
-    
-                render.moveCenter(event.offsetX,  event.offsetY)
-                render.param.magnification-=1
-            }
-
-            render.plot();
-    
-            slider.update("magnification")
-            text.update()
-        });
-    
-        canvas.addEventListener("pointerdown", (event) => {
-    
-            event.preventDefault()
-    
-            render.moveCenter(event.offsetX,  event.offsetY)
-    
-            render.plot()
-    
-            text.update()
-    
-        });
-    
-        canvas.addEventListener("pointermove", (event) => {
-    
-            event.preventDefault()
-    
-            const [x,y] = render.getCoordFromCanvas(event.offsetX,  event.offsetY)
-    
-            render.param.pointerX = Math.round(x*10**5)/10**5
-            render.param.pointerY = Math.round(y*10**5)/10**5
-    
-            text.update()
-        });
-    
-        canvas.addEventListener("touchmove", (event) => { event.preventDefault() });
-    
-        window.addEventListener('resize',() => {
-    
-            resize(canvas)
-    
-            render.canvas.width = canvas.width
-            render.canvas.height = canvas.height
-    
-            render.plot()
-        })
         
+        const setEvent = (canvas) => { 
+
+            canvas.addEventListener("wheel", (event) => {
+
+                event.preventDefault();
+        
+                if (event.deltaY<=-100){
+        
+                    render.camera.moveCenter(event.offsetX,  event.offsetY)
+                    render.param.magnification+=1   
+                }
+
+                else if (event.deltaY>=100){
+        
+                    render.camera.moveCenter(event.offsetX,  event.offsetY)
+                    render.param.magnification-=1
+                }
+
+                render.plot();
+        
+                slider.update("magnification")
+                text.update()
+            });
+        
+            canvas.addEventListener("pointerdown", (event) => {
+        
+                event.preventDefault()
+        
+                render.camera.moveCenter(event.offsetX,  event.offsetY)
+        
+                render.plot()
+        
+                text.update()
+        
+            });
+        
+            canvas.addEventListener("pointermove", (event) => {
+        
+                event.preventDefault()
+        
+                const [x,y] = render.camera.coord.getCoordFromCanvas(event.offsetX,  event.offsetY)
+
+                render.param.pointerX = Math.round(x*10**5)/10**5
+                render.param.pointerY = Math.round(y*10**5)/10**5
+
+                text.update()
+            });
+        
+            canvas.addEventListener("touchmove", (event) => { event.preventDefault() });
+
+
+            window.addEventListener('resize',() => {
+
+                render.canvas.DOM.map((v) => resize(v))
+        
+                render.canvas.width = render.canvas.DOM[0].width
+                render.canvas.height = render.canvas.DOM[0].height
+        
+                render.plot()
+            },{ signal: controller.signal })
+    
+        }
+
+        setEvent(render.canvas.DOM[render.canvas.number-1])
+
         render.plot()
     }  
+
+    return () => controller.abort()
 }
 
 export { loadPage }

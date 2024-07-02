@@ -10,15 +10,38 @@ const resize = function(canvas) {
     }
 }
 
-const createCanvas = function(container){
+const createCanvas = function(container, num=1 ){
 
-  const canvas = document.createElement("canvas")
+  if (num==1) {
+    const canvas = document.createElement("canvas")
 
-  container.appendChild(canvas)
+    canvas.style.position = "relative"
 
-  resize(canvas)
+    container.appendChild(canvas)
+    resize(canvas)
 
-  return [canvas, canvas.getContext("2d")]
+    return [[canvas], [canvas.getContext("2d")]]
+
+  }
+
+  const canvas = []
+  const canvasCtx = []
+  
+  for (let i=0; i<num; i++){
+    const c = document.createElement("canvas") 
+
+    canvas.push(c)
+    canvasCtx.push(c.getContext("2d"))
+
+    container.appendChild(c)
+    resize(c)
+
+    c.style.zIndex = i+1
+
+    if(i>=1) c.style.position = "relative"
+  }
+
+  return [canvas, canvasCtx]
 }
 
 
