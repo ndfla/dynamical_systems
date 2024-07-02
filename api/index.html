@@ -11,11 +11,6 @@
 
     <!-- The loading of KaTeX is deferred to speed up page rendering -->
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js" integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script>
-
-    <!-- To automatically render math in text elements, include the auto-render extension: -->
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
-        onload="renderMathInElement(document.body);"></script>
-
         
     <script type="module" src="dist/main.js" defer></script>
 
@@ -29,21 +24,19 @@
   
         <div id="menu" class="col-lg-4 bg-light">
 
-          <!-- <nav class="navbar navbar-expand-lg rounded"> -->
           <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <p class="navbar-brand h1">Dynamical Systems</p>
 
 
 
           <nav class="navbar navbar-light bg-light">
-          <div class="container-fluid px-4">
-            <!-- <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav-bar" aria-controls="nav-bar" aria-label="Toggle navigation"> -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
-    
-                <span class="navbar-toggler-icon"></span>
-            </button>
-          </div>
-        </nav>
+            <div class="container-fluid px-4">
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+      
+                  <span class="navbar-toggler-icon"></span>
+              </button>
+            </div>
+          </nav>
 
         <div class="collapse navbar-collapse" id="navbarToggleExternalContent">
           <div class="bg-light list-group list-group-flush lead">
@@ -52,7 +45,10 @@
                 <button type="button" class="list-group-item list-group-item-action" id="logisticMapCobweb">logistic map cobweb</button>
                 <button type="button" class="list-group-item list-group-item-action" id="tentMapBifurcation">tent map bifurcation</button>
                 <button type="button" class="list-group-item list-group-item-action" id="tentMapCobweb">tent map cobweb</button>
-                <button type="button" class="list-group-item list-group-item-action" id="nonlinearODE1">vectorfield</button>
+                <button type="button" class="list-group-item list-group-item-action" id="nonlinearODE1">ODE orbit1</button>
+                <button type="button" class="list-group-item list-group-item-action" id="LissajousCurve">Lissajous curve</button>
+                <button type="button" class="list-group-item list-group-item-action" id="LorentzSyetem">Lorentz system</button>
+                <button type="button" class="list-group-item list-group-item-action" id="Mandelbrot">Mandelbrot set</button>
               
           </div>
         </div>
