@@ -19,6 +19,8 @@ const controller = new AbortController()
 
 const loadPage = (json) => {
 
+    controller.abort()
+
     const oldpage = document.getElementById("page")
 
     const page = oldpage.cloneNode(false)
@@ -63,14 +65,12 @@ const loadPage = (json) => {
 
         for (let sliderData in json.UIcontainer.slider){
 
-            json.UIcontainer.slider[sliderData]["var"] = sliderData
             slider.initialize(json.UIcontainer.slider[sliderData])
         }
 
-        for (let textData of json.UIcontainer.text){
+        for (let textData in json.UIcontainer.text){
 
-            if (render.param[textData] === undefined) render.param[textData]=0.0
-            text.createText({ info: textData })
+            text.initializeText(json.UIcontainer.text[textData])
         }
 
         
@@ -80,21 +80,23 @@ const loadPage = (json) => {
 
                 event.preventDefault();
         
-                if (event.deltaY<=-100){
+                if (event.deltaY<=-10){
         
-                    render.camera.moveCenter(event.offsetX,  event.offsetY)
-                    render.param.magnification+=1   
+                    render.coordinate.moveCenter(event.offsetX,  event.offsetY) 
+
+                    slider.add("magnification", 1)
                 }
 
-                else if (event.deltaY>=100){
+                else if (event.deltaY>=10){
         
-                    render.camera.moveCenter(event.offsetX,  event.offsetY)
-                    render.param.magnification-=1
+                    render.coordinate.moveCenter(event.offsetX,  event.offsetY)
+
+                    slider.add("magnification", -1)
                 }
 
                 render.plot();
         
-                slider.update("magnification")
+                slider.update(["magnification"])
                 text.update()
             });
         
@@ -102,7 +104,7 @@ const loadPage = (json) => {
         
                 event.preventDefault()
         
-                render.camera.moveCenter(event.offsetX,  event.offsetY)
+                render.coordinate.moveCenter(event.offsetX,  event.offsetY)
         
                 render.plot()
         
@@ -114,10 +116,10 @@ const loadPage = (json) => {
         
                 event.preventDefault()
         
-                const [x,y] = render.camera.coord.getCoordFromCanvas(event.offsetX,  event.offsetY)
+                const [x,y] = render.coordinate.canvasPointToCoordinate(event.offsetX,  event.offsetY)
 
-                render.param.pointerX = Math.round(x*10**5)/10**5
-                render.param.pointerY = Math.round(y*10**5)/10**5
+                render.param.pointer.x = x
+                render.param.pointer.y = y
 
                 text.update()
             });
@@ -133,8 +135,7 @@ const loadPage = (json) => {
                 render.canvas.height = render.canvas.DOM[0].height
         
                 render.plot()
-            },{ signal: controller.signal })
-    
+            },{ signal: controller.signal })    
         }
 
         setEvent(render.canvas.DOM[render.canvas.number-1])
@@ -142,7 +143,7 @@ const loadPage = (json) => {
         render.plot()
     }  
 
-    return () => controller.abort()
+    return 
 }
 
 export { loadPage }

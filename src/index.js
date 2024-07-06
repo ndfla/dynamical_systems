@@ -18,50 +18,68 @@ const pageMap = {
 
                     map: (a,x) => a*x*(1-x)
                 },
-                layer: 1 
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
                 initx:{
                     info: "initial x",
                     min: -2,
                     max: 2,
                     step:400,
+                    path: ["initx"]
                 },
                 sample:{   
                     info: "sample",
                     min: 100,
                     max: 1000,
                     step:9,
+                    path: ["sample"]
                 },
                 iteration: {
                     info: "iteration",
                     min: 10,
                     max: 1000,
                     step:99,
+                    path: ["iteration"]
                 },
                 threshold: {
                     info: "threshold",
                     min: 1,
                     max: 200,
                     step:199,  
+                    path: ["threshold"]
                 },
                 scaleY: {
                     info: "scaleY",
                     min: 0.5,
                     max: 5.0,
                     step:45,
+                    path: ["scale", "y"]
                 }
             }
         }
@@ -85,50 +103,61 @@ const pageMap = {
 
                     map: (a,x) => a*x*(1-x)
                 },
-                layer: 1 
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
                 a:{
                     info: "a",
                     min: -4.5,
                     max: 4.5,
                     step:400,
+                    path: ["a"]
                 },
                 x:{
                     info: "x",
                     min: -2,
                     max: 2,
                     step:100,
+                    path: ["x"]
                 },
                 iteration:{   
                     info: "iteration",
                     min: 10,
                     max: 1000,
                     step:99,
-                },
-                scaleY: {
-                    info: "scaleY",
-                    min: 0.5,
-                    max: 5.0,
-                    step:45,
+                    path: ["iteration"]
                 },
                 transparency: {
                     info: "line transparency",
                     min: 0.1,
                     max: 1.0,
                     step:9,
+                    path: ["transparency"]
                 }
             }
         }
@@ -155,50 +184,67 @@ const pageMap = {
 
                     map: (a,x) => a*Math.min(x, 1-x)
                 },
-                layer: 1   
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
                 initx:{
                     info: "initial x",
                     min: -0.2,
                     max: 1.2,
                     step:140,
+                    path: ["initx"]
                 },
                 sample:{   
                     info: "sample",
                     min: 100,
                     max: 1000,
                     step:9,
+                    path: ["sample"]
                 },
                 iteration: {
                     info: "iteration",
                     min: 10,
                     max: 1000,
                     step:99,
+                    path: ["iteration"]
                 },
                 threshold: {
                     info: "threshold",
                     min: 1,
                     max: 200,
                     step:199,  
+                    path: ["threshold"]
                 },
                 scaleY: {
                     info: "scaleY",
                     min: 0.5,
                     max: 5.0,
                     step:45,
+                    path: ["scale", "y"]
                 },
             }
         }
@@ -224,51 +270,61 @@ const pageMap = {
                     transparency: 0.5,
 
                     map: (a,x) => a*Math.min(x, 1-x)
-                },
-                layer: 1    
+                }, 
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
                 a:{
                     info: "a",
                     min: -4.5,
                     max: 4.5,
                     step:400,
+                    path: ["a"]
                 },
                 x:{
                     info: "x",
                     min: -2,
                     max: 2,
                     step:100,
+                    path: ["x"]
                 },
                 iteration:{   
                     info: "iteration",
                     min: 10,
                     max: 1000,
                     step:99,
-                },
-                scaleY: {
-                    info: "scaleY",
-                    min: 0.5,
-                    max: 5.0,
-                    step:45,
+                    path: ["iteration"]
                 },
                 transparency: {
                     info: "line transparency",
                     min: 0.1,
                     max: 1.0,
                     step:9,
+                    path: ["transparency"]
                 }
             }
         }
@@ -297,50 +353,67 @@ const pageMap = {
                     fx: (x,y) => y,
                     fy: (x,y) => Math.sin(x)
                 },
-                layer: 1   
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
                 initx:{
                     info: "initial x",
                     min: -3*Math.PI,
                     max: 3*Math.PI,
                     step:400,
+                    path: ["initx"]
                 },
                 inity:{
                     info: "initial y",
                     min: -3*Math.PI,
                     max: 3*Math.PI,
                     step:400,
+                    path: ["inity"]
                 },
                 sample:{   
                     info: "sample",
                     min: 100,
                     max: 1000,
                     step:9,
+                    path: ["sample"]
                 },
                 h: {
                     info: "h",
                     min: 0.01,
                     max: 0.1,
                     step:9,
+                    path: ["h"]
                 },
                 scaleY: {
                     info: "scaleY",
                     min: 0.5,
                     max: 5.0,
                     step:45,
+                    path: ["scale", "y"]
                 }
             }
         }
@@ -377,60 +450,73 @@ const pageMap = {
                 },
                 layer: 1   
             },
-            text: [
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
-                },
-                scaleY: {
-                    info: "scaleY",
-                    min: 0.5,
-                    max: 5.0,
                     step:45,
+                    path: ["magnification"]
                 },
                 A: {
                     info: "A",
                     min: -2,
                     max: 2,
                     step:40,
+                    path: ["A"]
                 },
                 B: {
                     info: "B",
                     min: -2,
                     max: 2,
                     step:40,
+                    path: ["B"]
                 },
                 a: {
                     info: "a",
                     min: -2,
                     max: 2,
                     step:40,
+                    path: ["a"]
                 },
                 b: {
                     info: "b",
                     min: -2,
                     max: 2,
                     step:40,
+                    path: ["b"]
                 },
                 delta: {
                     info: "delta",
                     min: -2,
                     max: 2,
                     step:40,
+                    path: ["delta"]
                 },
                 sample: {
                     info: "curve sample",
                     min: 200,
                     max: 1000,
                     step:8,
+                    path: ["sample"]
                 }
 
             }
@@ -466,78 +552,87 @@ const pageMap = {
                     inity: 1,
                     initz: -3,
 
-
                     sigma: 3,
                     rho: 36,
                     beta: 1.5,
                     h: 0.005,
 
+                    rotation: 0,
+                    phi: 0,
                     theta: 0,
-                    phi: 2
-                },
-                layer: 1   
+                }, 
             },
-            text:  [],
+            text:  {},
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:45,
+                    path: ["magnification"]
                 },
-                phi: {
+                rotation: {
                     info: "rotation",
                     min: 0,
                     max: 2*Math.PI,
-                    step:30
+                    step:30,
+                    path: ["rotation"]
                 },
                 initx:{
                     info: "initial x",
                     min: -10,
                     max: 10,
                     step:200,
+                    path: ["initx"]
                 },
                 inity:{
                     info: "initial y",
                     min: -10,
                     max: 10,
                     step:200,
+                    path: ["inity"]
                 },
                 initz:{
                     info: "initial z",
                     min: -10,
                     max: 10,
                     step:200,
+                    path: ["initz"]
                 },
                 sigma:{
                     info: "sigma",
                     min: -2,
                     max: 4,
                     step:300,
+                    path: ["sigma"]
                 },
                 rho:{
                     info: "rho",
                     min: 0,
                     max: 40,
                     step:40,
+                    path: ["rho"]
                 },
                 beta:{
                     info: "beta",
                     min: 1,
                     max: 5,
                     step:200,
+                    path: ["beta"]
                 },
                 sample:{   
                     info: "sample",
                     min: 300,
                     max: 3000,
                     step:9,
+                    path: ["sample"]
                 },
                 h: {
                     info: "h",
                     min: 0.001,
                     max: 0.005,
                     step:5,
+                    path: ["h"]
                 },
             }
         }
@@ -559,10 +654,7 @@ const pageMap = {
                 data:{ 
                     initwidth: 4,
 
-                    center: {
-                        x: -1,
-                        y: 0
-                    },
+                    center: {x: -1, y: 0},
 
                     iteration: 50,
                     contouring: 50,
@@ -573,53 +665,70 @@ const pageMap = {
 
                 }, 
             },
-            text:  [           
-                "centerX",
-                "pointerX",
-                "centerY",
-                "pointerY"
-            ],
+            text: {
+                centerX:{ 
+                    info: "centerX",
+                    path: ["center", "x"],
+                },
+                pointerX: {
+                    info: "pointerX",
+                    path: ["pointer", "x"],
+                },
+                centerY: {
+                    info: "centerY",
+                    path: ["center", "y"],
+                },
+                pointerY: {
+                    info: "pointerY",
+                    path: ["pointer", "y"],
+                }
+            },
             slider:{
                 magnification: {
                     info:"magnification",
                     min: -5,
                     max: 40,
-                    step:45
+                    step:90,
+                    path: ["magnification"]
                 },
                 contouring: {
                     info:"contouring",
                     min: 10,
                     max: 200,
-                    step:19
+                    step:19,
+                    path: ["contouring"]
                 },
                 iteration:{   
                     info: "iteration",
                     min: 10,
                     max: 200,
                     step:19,
+                    path: ["iteration"]
                 },
                 julia: {
                     info: "julia",
                     min: 0,
                     max: 1,
                     step:1,
+                    path: ["julia"]
                 },
                 juliaRe:{
                     info: "julia real",
                     min: -2,
                     max: 2,
                     step:200,
+                    path: ["juliaRe"]
                 },
                 juliaIm:{
                     info: "julia imaginary",
                     min: -2,
                     max: 2,
                     step:200,
+                    path: ["juliaIm"]
                 },
             }
         }
     },
-
 }
 
 
@@ -633,19 +742,15 @@ const initializePage = (() =>{
 })();
 
 
-let removeEvent = () => {}
-
 for (let page in pageMap) {
 
     document.getElementById(page).addEventListener('click', () => {
-
-        removeEvent()
         
         const url = new URL(window.location)
 
         url.searchParams.set('page', page)
         window.history.replaceState({}, '', url)
 
-        removeEvent = loadPage(pageMap[page])
+        loadPage(pageMap[page])
     })
 }

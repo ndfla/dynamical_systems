@@ -1,29 +1,51 @@
 import { Element } from "./element.js"
+import { isPropertyExist } from "./util.js"
+
 class Text {
     constructor(target, container, attribute){
 
-        this.target = target
-        this.data = {}
+        this.textObj = {}
 
         this.container = Element.create(container, "div", attribute)
+
+        this.getProperty = (path) => path.reduce((obj, property) => obj[property], target.param)
+
+        this.isPropertyExist = (path) => isPropertyExist(target.param, path)
     }
 
-    createText(data){
+    createText(){
 
         const container = Element.create(this.container, "div")
 
-        const text = Element.create(container, "p", {id: data.id})
+        const textDOM = Element.create(container, "p")
 
-        text.className = "lead"
-        text.innerHTML = data.info + " : " + "<b>"+ String(this.target.param[data.info]) + "</b>"
-
-        this.data[data.info] = text
+        return textDOM
     }
 
-    update(){
+    initializeText(data) {
 
-        for(let key of Object.keys(this.data)){
-            this.data[key].innerHTML = key + " : " + "<b>"+ String(Math.round(this.target.param[key]*10**5)/10**5) + "</b>"
+        const f = this.isPropertyExist(data.path)
+
+        if (f==="undefined") return
+
+        const  textDOM = this.createText(data)
+
+        textDOM.className = "lead"
+        textDOM.innerHTML = `${data.info} : <b> ${f} </b>`
+
+        this.textObj[data.path.join(".")] = {
+            DOM:textDOM, 
+            property: () => this.getProperty(data.path)
+        }
+    }
+
+    update(keys=Object.keys(this.textObj)){
+
+        for(let key of keys){
+
+            const property = this.textObj[key].property()
+
+            this.textObj[key].DOM.innerHTML = `${key} : <b> ${Math.round(property*10**5)/10**5} </b>`
         }
     }
 }

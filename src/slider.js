@@ -1,13 +1,38 @@
 import { Element } from "./element.js"
-
+import { isPropertyExist } from "./util.js"
 class Slider {
     constructor(target,container, attribute){
 
         this.target = target
 
-        this.sliderData = {}
+        this.sliderObj = {}
 
         this.container = Element.create(container, "div", attribute)
+
+        this.getProperty = (path) => path.reduce((obj, property) => obj[property], target.param)
+
+        this.setProperty = (path, value) => {
+
+            let obj = target.param
+
+            for (let i=0; i<path.length-1; i++) obj = obj[path[i]]
+    
+            obj[path[path.length-1]] = value
+
+            return 
+        }
+            
+        this.isPropertyExist = (path) => isPropertyExist(target.param, path)
+    }
+
+    static sliderToValue(value, max, min, step, digit){
+
+        return Math.round(((max-min)*value/step + min)*10**digit)/10**digit
+    }
+
+    static valueToSlider(value, max, min, step, digit){
+        
+        return Math.round((step*(value-min)/(max-min))*10**digit)/10**digit
     }
 
     createSlider(){
@@ -16,60 +41,85 @@ class Slider {
 
         const sliderInfo = Element.create(container, "h5", {className: "lead"})
 
-        const slider = Element.create(container, "input", {type: "range"})
+        const sliderDOM = Element.create(container, "input", {
+            type: "range", 
+            id: "slider"
+        })
 
-        return [slider, sliderInfo]
+        return [sliderDOM, sliderInfo]
     }
 
     initialize(data){
 
-        const [slider, sliderInfo] = this.createSlider()
+        const f = this.isPropertyExist(data.path)
 
+        if (f==="undefined") return
 
-        Element.update(slider,
+        const valueToSlider = (value) => Slider.valueToSlider(value, data.max, data.min, data.step, 3)
+
+        const sliderToValue = (value) => Slider.sliderToValue(value, data.max, data.min, data.step, 3)
+
+        const [sliderDOM, sliderInfo] = this.createSlider()
+
+        Element.update(sliderDOM,
             {
-                id: "id" in data ? data.id : "slider",
                 min: 0,
                 max: data.step,
-                value: data.step/(data.max-data.min) * (this.target.param[data.var]-data.min)
+                value: valueToSlider(f)
             }
         )
 
-        sliderInfo.innerHTML = data.info + ": " +"<b>"+ String(this.target.param[data.var]) + "</b>"
+        sliderInfo.innerHTML =`${data.info} : <b> ${f} </b>`
 
-        slider.addEventListener('input', (e) => {
+        sliderDOM.addEventListener('input', (e) => {
 
-            const absoluteScale = Math.round(((data.max-data.min)*e.target.value/data.step + data.min) *10**3)/10**3
+            const absoluteScale = sliderToValue(e.target.value)
 
-            this.target.param[data.var] = absoluteScale
+            this.setProperty(data.path, absoluteScale)
 
-            sliderInfo.innerHTML = data.info + ": " + "<b>"+ String(absoluteScale) +"</b>"
+            sliderInfo.innerHTML = `${data.info} : <b> ${absoluteScale} </b>`
             
             this.target.plot()
 
         })
 
-        this.sliderData[data.var] = {
-            object: slider, 
-            info: sliderInfo,
-            data: data
+        this.sliderObj[data.path.join(".")] = {
+            info: {
+                DOM: sliderInfo,
+                content: data.info
+            },
+            DOM: sliderDOM, 
+            property: () => this.getProperty(data.path),
+
+            setProperty: (value) => this.setProperty(data.path, sliderToValue(value)),
+
+            setValue: () => {sliderDOM.value = valueToSlider(this.getProperty(data.path))},
         }
         return 
     }
 
-    update(variable){
+    update(keys=Object.keys(this.sliderObj)){
 
-        const slider = this.sliderData[variable].object
+        for(let key of keys){
 
-        const info = this.sliderData[variable].info
+            const obj = this.sliderObj[key]
 
-        const data = this.sliderData[variable].data
+            obj.setValue()
+
+            obj.info.DOM.innerHTML = `${obj.info.content} : <b> ${obj.property()} </b>`
+        }
+    }
+
+    add(key, n){
+        const obj = this.sliderObj[key]
+
+        obj.DOM.value = String(Number(obj.DOM.value) + n)
 
 
-        slider.value = Math.round((data.step*(this.target.param[data.var]-data.min)/(data.max-data.min))*10**3)/10**3
+        obj.setProperty(obj.DOM.value)
 
-        info.innerHTML = data.info + ": " + "<b>" +  String(this.target.param[variable]) + "</b>"
-        
+        obj.info.DOM.innerHTML = `${obj.info.content} : <b> ${obj.property()} </b>`
+
     }
 }
 

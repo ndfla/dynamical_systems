@@ -7,6 +7,8 @@ class Canvas {
 
         const [canvas, canvasCtx] = createCanvas(container, num)
 
+        this.layer = 0
+
         this.DOM = canvas
         this.context = canvasCtx
 
@@ -22,6 +24,8 @@ class Canvas {
         canvas[0].style.backgroundColor = typeof color!="undefined" ? color : "black" 
 
     }
+
+    get target() {return this.context[this.layer]}
 }
 
 
@@ -32,160 +36,193 @@ class Coordinate {
     constructor(data){
         this.canvas = new Canvas(data.container, data.backgroundColor, data.canvasNum)
 
-        this.#initwidth = data.initwidth
+        this.#initwidth = typeof data.initwidth==="undefined" ? 4 : data.initwidth
 
-        this.param = {
-            magnification: typeof data.magnification=="undefined" ? 1 : data.magnification,
-            centerX: typeof data.center=="undefined" ? 0.0 : data.center.x,
-            centerY: typeof data.center=="undefined" ? 0.0 : data.center.y,
+        this.param = Object.assign(data, {
+            magnification: typeof data.magnification==="undefined" ? 1 : data.magnification,
 
-            scaleX: typeof data.scale=="undefined" ? 1.0 : data.scale.x,
-            scaleY: typeof data.scale=="undefined" ? 1.0 : data.scale.y,
-        }
+            center: typeof data.center==="undefined" ? {x: 0.0, y: 0.0} : data.center,
+            scale: {x: 1.0, y:1.0},
+            pointer: {x: 0.0, y: 0.0},
+
+        })
+
+        this.width = () => this.#initwidth/2**(this.param.magnification-1)
+
     }
 
-    get width(){ return (this.#initwidth/2**(this.param.magnification-1))}
+    get viewWidth(){ return this.width()/this.param.scale.x }
 
-    get scaledWidth(){return this.width/this.param.scaleX }
+    get viewHeight(){ return this.width()*this.canvas.aspect/this.param.scale.y }
 
-    get scaledHeight(){ return this.width*this.canvas.aspect/this.param.scaleY }
-
-    getCoordFromCanvas(x,y){
-    
-        x = this.param.centerX + this.scaledWidth*(x/this.canvas.width-0.5), 
-
-        y = this.param.centerY + this.scaledHeight*(0.5-y/this.canvas.height)
+    canvasPointToCoordinate(x,y){
+        x = this.param.center.x + this.viewWidth*(x/this.canvas.width-0.5)
+        y = this.param.center.y + this.viewHeight*(0.5-y/this.canvas.height)
         
         return [x,y]
     }
-}
-class Camera {
-    constructor(data){  
-        this.coord = new Coordinate(data)
 
-        this.param = this.coord.param
+    coordinateToCanvasPoint(x,y){
+        x = this.canvas.width*(0.5 + (x-this.param.center.x)/this.viewWidth)
+        y = this.canvas.height*(0.5 - (y-this.param.center.y)/this.viewHeight)
 
-        this.canvas = this.coord.canvas
-    } 
-
-    get width(){ return this.coord.scaledWidth}
-
-    get height(){ return this.coord.scaledHeight}
+        return [x,y]
+    }
 
     moveCenter(x,y) {
-        [this.param.centerX, this.param.centerY] = this.coord.getCoordFromCanvas(x, y)
+        [this.param.center.x, this.param.center.y] = this.canvasPointToCoordinate(x, y)
     }
-
-    coordToCanvasX(x){
-        return this.canvas.width*(0.5 + (x-this.param.centerX)/this.width)
-    }
-
-    coordToCanvasY(y){
-        return this.canvas.height*(0.5 - (y-this.param.centerY)/this.height)
-    }
-
 }
 
 class Draw {
-    constructor(camera){
-        this.camera = camera
-        this.canvas = camera.canvas
-        this.param = camera.param
+    constructor(coordinate){
+        this.coordinate = coordinate
+        this.canvas = coordinate.canvas
+        this.param = coordinate.param
 
-        this.layer = 0
     }
 
-    get pixelLengthX() { return this.camera.width/this.canvas.width}
+    get targetCanvas() { return this.canvas.target}
 
-    get pixelLengthY() { return this.camera.height/this.canvas.height}
+    get pixelLengthX() { return this.coordinate.viewWidth/this.canvas.width}
 
-    get target() {return this.canvas.context[this.layer]}
+    get pixelLengthY() { return this.coordinate.viewHeight/this.canvas.height}
 
-    coordToCanvasX(x){
-        return this.canvas.width*(0.5 + (x-this.param.centerX)/this.camera.width)
-    }
+    isPointInside(x,y) {
+        const b1 = Math.abs(x-this.param.center.x)<=0.5*this.coordinate.viewWidth
+        const b2 = Math.abs(y-this.param.center.y)<=0.5*this.coordinate.viewHeight
 
-    coordToCanvasY(y){
-        return this.canvas.height*(0.5 - (y-this.param.centerY)/this.camera.height)
+        return b1 && b2
     }
 
     clear(){
 
-        this.target.clearRect(0, 0, this.canvas.width, this.canvas.height)
+        this.targetCanvas.clearRect(0, 0, this.canvas.width, this.canvas.height)
     }
 
     localPoint(x,y,r,color='red'){
 
-        this.target.fillStyle = color
+        this.targetCanvas.fillStyle = color;
         
-        x = this.coordToCanvasX(x)
-        y = this.coordToCanvasY(y)
+        [x,y] = this.coordinate.coordinateToCanvasPoint(x,y)
 
-        this.target.beginPath();
-        this.target.arc(x, y, r, 0, 2*Math.PI);
-        this.target.fill();
+        this.targetCanvas.beginPath();
+        this.targetCanvas.arc(x, y, r, 0, 2*Math.PI);
+        this.targetCanvas.fill();
     }
 
     point(x,y, color='white'){
 
 
         const r = {
-            x: this.camera.width/2,
-            y: this.camera.height/2
+            x: this.coordinate.viewWidth/2,
+            y: this.coordinate.viewHeight/2
         }
 
-        if (x>this.param.centerX+r.x || x<this.param.centerX-r.x ||
-            y>this.param.centerY+r.y || y<this.param.centerY-r.y
-        ) return
+        if (Math.abs(x-this.param.center.x)>r.x || Math.abs(y-this.param.center.y)>r.y) return
 
-        this.target.fillStyle = color
+        this.targetCanvas.fillStyle = color;
             
-        x = this.coordToCanvasX(x)
-        
-        y = this.coordToCanvasY(y)
+        [x,y] = this.coordinate.coordinateToCanvasPoint(x,y)
 
-        this.target.fillRect(x,y,1,1)
+        this.targetCanvas.fillRect(x,y,1,1)
     }
 
 
     line(x1,y1,x2,y2, color='gray', width=1){
 
 
-        x1 = this.coordToCanvasX(x1)
-        y1 = this.coordToCanvasY(y1)
-        x2 = this.coordToCanvasX(x2)
-        y2 = this.coordToCanvasY(y2)
+        const b1 = this.isPointInside(x1,y1)
+        const b2 = this.isPointInside(x2,y2)
 
-        // 線の位置がずれる
+        const point = []
 
-        y1 = Math.abs(y1) > 2*this.canvas.height ? Math.sign(y1)*2*this.canvas.height : y1
-        y2 = Math.abs(y2) > 2*this.canvas.height ? Math.sign(y2)*2*this.canvas.height : y2
 
-        this.target.strokeStyle = color
+        if (!(b1 && b2)) {
 
-        this.target.lineWidth = width
+            const c = {x: this.param.center.x, y: this.param.center.y}
 
-        this.target.beginPath()
+            const r = {x: 0.5*this.coordinate.viewWidth, y: 0.5*this.coordinate.viewHeight}
 
-        this.target.moveTo(x1,y1)
-        this.target.lineTo(x2,y2)
+            const left = c.x - r.x
+            const top = c.y + r.y
+            const right = c.x + r.x
+            const bottom = c.y - r.y
+            
+            const verticalLine = (lineX) => {
 
-        this.target.stroke()
+                if (Math.sign(x1-lineX) != Math.sign(x2-lineX)) {
+
+                    const t = (lineX-x1)/(x2-x1)
+        
+                    const intersectionY = y1 + t*(y2-y1) 
+        
+                    if (t==1 || Math.abs(intersectionY - c.y) <= r.y) point.push([lineX, intersectionY])
+                }
+            }
+
+            const holizontalLine = (lineY) => {
+
+                if (Math.sign(y1-lineY) != Math.sign(y2-lineY)) {
+
+                    const t = (lineY-y1)/(y2-y1)
+
+        
+                    const intersectionX = x1 + t*(x2-x1) 
+        
+                    if (t==1 || Math.abs(intersectionX - c.x) <= r.x) point.push([intersectionX, lineY])
+                }
+            }
+
+            verticalLine(left)
+            verticalLine(right)
+            holizontalLine(top)
+            holizontalLine(bottom)
+
+            if (point.length<2 && b1) point.push([x1,y1])
+            if (point.length<2 && b2) point.push([x2,y2])
+            
+        }
+        else {
+            point.push([x1,y1])
+            point.push([x2,y2])
+        }
+
+
+        if (point.length<2) return
+
+        [x1,y1] = this.coordinate.coordinateToCanvasPoint(...point[0]);
+
+        [x2,y2] = this.coordinate.coordinateToCanvasPoint(...point[1])
+
+
+        this.targetCanvas.strokeStyle = color
+
+        this.targetCanvas.lineWidth = width
+
+        this.targetCanvas.beginPath()
+
+        this.targetCanvas.moveTo(x1,y1)
+        this.targetCanvas.lineTo(x2,y2)
+
+        this.targetCanvas.stroke()
+
 
     }
 
     rect(x,y, width, height){
 
-        this.canvas.context[this.layer].fillStyle = 'black';
 
-        const x1 = this.coordToCanvasX(x)
-        const y1 = this.coordToCanvasY(y)
+        this.targetCanvas.fillStyle = 'black'
 
+        [x1,y1] = this.coordinate.coordinateToCanvasPoint(x,y)
 
-        width = this.coordToCanvasX(x+width)-x1
-        height = y1-this.coordToCanvasY(y+height)
+        const [x2,y2] = this.coordinate.coordinateToCanvasPoint(x+width,y+height)
 
-        this.target.fillRect(
+        width = x2-x1
+        height = y1-y2
+
+        this.targetCanvas.fillRect(
             Math.max(x1, 0.0), 
             Math.max(y1, 0.0), 
             Math.min(width+Math.min(x1, 0.0), this.canvas.width), 
@@ -193,40 +230,37 @@ class Draw {
         )
     }
 
-    diff(callback,h){
-        return (a) => (callback(a+h)-callback(a-h))/(2*h)
-
-    }
-
     grid(){
+        const width = this.coordinate.viewWidth
+        const height = this.coordinate.viewHeight
 
-        const k = this.camera.width<50 ? 1.0 : 5*10**(Math.floor(Math.log10(this.camera.width/5.0)-1.0))
+        const k = width<50 ? 1.0 : 5*10**(Math.floor(Math.log10(width/5.0)-1.0))
 
-        const l = this.param.centerX - this.camera.width/2
+        const l = this.param.center.x - 0.5*width
 
-        const u = this.param.centerY - this.camera.height/2
+        const u = this.param.center.y - 0.5*height
 
         let s = Math.floor(l) - Math.floor(l)%k
 
         let t = Math.floor(u) - Math.floor(u)%k
 
-        while(s<=l+this.camera.width){
+        while(s<=l+width){
 
             if (s==0){
-                this.line(s, u, s, u+this.camera.height,"darkred")
+                this.line(s, u, s, u+height,"darkred")
 
             }
-            else this.line(s, u, s, u+this.camera.height)
+            else this.line(s, u, s, u+height)
 
             s+=k
         }
 
-        while(t<=u+this.camera.height){
+        while(t<=u+height){
 
-            if (t==0){
-                this.line(l, t, l+this.camera.width, t,"darkred")
+            if (t==0){ 
+                this.line(l, t, l+width, t,"darkred")
             }
-            else this.line(l, t, l+this.camera.width, t)
+            else this.line(l, t, l+width, t)
 
             t+=k
         }
@@ -234,19 +268,17 @@ class Draw {
 
     eachPoint(f){
 
-        const context = this.target
-
-        let image = context.createImageData(this.canvas.width, this.canvas.height)
+        let image = this.targetCanvas.createImageData(this.canvas.width, this.canvas.height)
 
         const pixelwidth = this.pixelLengthX
         const pixelheight = this.pixelLengthY 
 
-        let x = this.param.centerX - 0.5*this.camera.width
+        let x = this.param.center.x - 0.5*this.coordinate.viewWidth
         let y
         
         for(let i=0; i<this.canvas.width; i++){
 
-            y = this.param.centerY + 0.5*this.camera.height
+            y = this.param.center.y + 0.5*this.coordinate.viewHeight
 
             for(let j=0; j<this.canvas.height; j++){
 
@@ -268,7 +300,7 @@ class Draw {
             x+=pixelwidth
         }
 
-        context.putImageData(image,0,0)
+        this.targetCanvas.putImageData(image,0,0)
 
 
     }
@@ -278,14 +310,14 @@ class Draw {
         const pixlenX = this.pixelLengthX
         const pixlenY = this.pixelLengthY
 
-        let _x = this.param.centerX - 0.5*this.camera.width
+        let _x = this.param.center.x - 0.5*this.camera.width
 
         for(let x=0; x<this.canvas.width; x++){
 
             const lx = _x - 0.5*pixlenX
             const rx = _x + 0.5*pixlenX
 
-            let _y = this.param.centerY + 0.5*this.camera.height
+            let _y = this.param.center.y + 0.5*this.camera.height
 
             for(let y=0; y<this.canvas.height; y++){
 
@@ -313,7 +345,7 @@ class Draw {
 
         const h = this.pixelLengthX
 
-        const _x = this.param.centerX - 0.5*this.camera.width
+        const _x = this.param.center.x - 0.5*this.coordinate.viewWidth
         
         const data = explicitGraph(f, h, _x, this.canvas.width)
 
@@ -335,13 +367,13 @@ class Draw {
 class DiscreteDynamicalSystem {
     constructor(data){
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
 
             iteration: data.iteration,
             threshold: data.threshold,
@@ -353,11 +385,10 @@ class DiscreteDynamicalSystem {
         })
 
         this.map = data.map
-        
     }
 
     normalizeSample(a){
-        return this.param.centerX + (a/this.param.sample-0.5)*this.camera.width
+        return this.param.center.x + (a/this.param.sample-0.5)*this.coordinate.viewWidth
     }
 
     plot(){
@@ -386,13 +417,13 @@ class DiscreteDynamicalSystem {
 class VectorField {
     constructor(data){
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
             initx: data.initx,
             inity: data.inity,
             sample: data.sample,
@@ -408,8 +439,8 @@ class VectorField {
 
     plot(){
 
-        this.param.centerX = this.param.initx 
-        this.param.centerY = this.param.inity
+        this.param.center.x = this.param.initx 
+        this.param.center.y = this.param.inity
 
         this.draw.clear()
         this.draw.grid()
@@ -433,13 +464,13 @@ class VectorField {
 class Cobweb {
     constructor(data){
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
 
             iteration: data.iteration,
             a: data.a,
@@ -485,14 +516,14 @@ class Lissajous {
 
         data.canvasNum = 2
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
 
             sample: data.sample,
             A: data.A,
@@ -527,7 +558,7 @@ class Lissajous {
         this.time = () => (Date.now() - startTime) / 1000
 
         this.p = () => {
-            this.draw.layer=1
+            this.draw.canvas.layer=1
             this.draw.clear()
             const t = this.period()*((this.time()/10)%1.0)
 
@@ -547,7 +578,7 @@ class Lissajous {
 
     plot(){
 
-        this.draw.layer = 0
+        this.draw.canvas.layer = 0
 
         this.draw.clear()
 
@@ -572,13 +603,13 @@ class Lissajous {
 class Lorentz {
     constructor(data){
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
             initx: data.initx,
             inity: data.inity,
             initz: data.initz,
@@ -591,38 +622,22 @@ class Lorentz {
 
             h: data.h,
 
-            domain: data.domain,
-
-            theta: data.theta,
-            phi: data.phi,
+            rotation: data.rotation,
         })
 
         this.fx = (x,y,z) => this.param.sigma*(y-x)
         this.fy = (x,y,z) => x*(this.param.rho-z)-y
         this.fz = (x,y,z) => x*y-this.param.beta*z
 
-
         this.rotz = (x,y,z) => {
 
-            const c = Math.cos(this.param.phi)
-            const s = Math.sin(this.param.phi)
+            const c = Math.cos(this.param.rotation)
+            const s = Math.sin(this.param.rotation)
             
             const x_ = c*x+s*y
             const y_ = -s*x+c*y
 
             return [x_,y_,z]
-        }
- 
-        this.rotfront = (x,y,z, n) => {
-
-            const c = Math.cos(this.param.theta)
-            const s = Math.sin(this.param.theta)
- 
-            const x_ = (n[0]**2 * (1-c)+c)*x + n[0]*n[1]*(1-c)*y + n[1]*s*z
-            const y_ = n[0]*n[1]*(1-c)*x + (n[1]**2 * (1-c)+c)*y - n[0]*s*z
-            const z_ = -n[1]*s*x + n[0]*s*y + c*z
-
-            return [x_,y_,z_]
         }
     }
 
@@ -663,13 +678,13 @@ class Lorentz {
 class Mandelbrot {
     constructor(data){
 
-        this.camera = new Camera(data)
+        this.coordinate = new Coordinate(data)
 
-        this.draw = new Draw(this.camera)
+        this.draw = new Draw(this.coordinate)
 
-        this.canvas = this.camera.canvas
+        this.canvas = this.coordinate.canvas
 
-        this.param = Object.assign(this.camera.param,{
+        this.param = Object.assign(this.coordinate.param,{
 
             iteration: data.iteration,
             contouring: data.contouring,
